@@ -1,0 +1,20 @@
+{
+  "catalog": {
+    "entry": "/primary",
+    "renditions": [
+      "/primary",
+      "/missing-rel"
+    ],
+    "audience": "learner-and-speaker-separated"
+  },
+  "resources": {
+    "/primary": {
+      "file": "primary.bin",
+      "type": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    },
+    "/missing-rel": {
+      "file": "resource-01.bin",
+      "type": "application/octet-stream"
+    }
+  }
+}
