@@ -40,3 +40,25 @@ test('来源领取、原件持久化、重启查询及无副作用拒收', async
     assert.ok(body.includes('primary'));
   } finally { await service.close(); await provider.close(); await rm(directory, { recursive: true, force: true }); }
 });
+test('接收记录保存页面/母版/讲者分层采集结果', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'intake-test-'));
+  const provider = await startProvider();
+  const service = await startService({ source: provider.url, directory });
+  try {
+    const intake = await fetch(`${service.url}/intakes`, { method: 'POST',
+      headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path: '/primary' }) });
+    assert.equal(intake.status, 201);
+    const records = await (await fetch(`${service.url}/records`)).json();
+    const [first, second] = records[0].parsed.slides;
+    assert.equal(first.position, 1);
+    assert.deepEqual(first.texts.map(t => [t.text, t.audience, t.origin]), [
+      ['现场课程', 'learner', 'slide'],
+      ['培训资料仅供内部使用', 'learner', 'master'],
+      ['仅讲者可见的补充说明', 'speaker', 'notes']]);
+    assert.deepEqual(first.placeholderDefinitions.map(d => d.text), ['培训标题提示']);
+    assert.equal(second.visible, false);
+    assert.deepEqual(second.texts.map(t => t.text), ['']);
+    const reopened = await new Store(directory).list();
+    assert.deepEqual(reopened[0].parsed.slides, records[0].parsed.slides);
+  } finally { await service.close(); await provider.close(); await rm(directory, { recursive: true, force: true }); }
+});
